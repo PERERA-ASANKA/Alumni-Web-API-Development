@@ -1,0 +1,15 @@
+{
+  "$id": "users",
+  "type": "object",
+  "properties": {
+    "firstname": {
+      "type": "string"
+    },
+    "lastname": {
+      "type": "string"
+    },
+    "redirectUri": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+db:
+  redis:
+    emulate: true
+    namespace: EG
+
+crypto:
+  cipherKey: sensitiveKey
+  algorithm: aes256
+  hashCycles: 10
+
+systemLog:
+  level: debug
+  transport: stdout
+
+accessLog:
+  transports:
+    - output: stdout

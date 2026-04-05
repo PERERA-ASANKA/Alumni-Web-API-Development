@@ -1,0 +1,45 @@
+http:
+  port: 8081
+
+admin:
+  port: 9876
+  hostname: localhost
+
+apiEndpoints:
+  alumniAPI:
+    host: '*'
+    paths:
+      - '/api/*'
+
+serviceEndpoints:
+  expressApp:
+    url: 'http://localhost:3000'
+
+policies:
+  - proxy
+  - rate-limit
+  - log
+  - cors
+
+pipelines:
+  mainPipeline:
+    apiEndpoints:
+      - alumniAPI
+    policies:
+      - cors:
+          - action:
+              origin: '*'
+              methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+              allowedHeaders: 'Content-Type,Authorization'
+      - log:
+          - action:
+              message: '${req.method} ${req.path} ${res.statusCode}'
+      - rate-limit:
+          - action:
+              max: 100
+              windowMs: 900000
+      - proxy:
+          - action:
+              serviceEndpoint: expressApp
+              changeOrigin: true
+              stripPath: false

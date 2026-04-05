@@ -1,0 +1,12 @@
+{
+  "$id": "applications",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "redirectUri": {
+      "type": "string"
+    }
+  }
+}
