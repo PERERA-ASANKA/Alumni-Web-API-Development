@@ -1,12 +1,8 @@
 const crypto  = require('crypto');
 const { ApiKey, ApiKeyLog } = require('../models');
 
-// ─────────────────────────────────────────
-// POST /api/keys — generate a new API key
-// ─────────────────────────────────────────
 exports.generateKey = async (req, res) => {
   try {
-    // Generate a secure random key with a readable prefix
     const rawKey  = `alum_${crypto.randomBytes(32).toString('hex')}`;
     const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
 
@@ -15,8 +11,6 @@ exports.generateKey = async (req, res) => {
       key_hash: keyHash,
     });
 
-    // IMPORTANT: Return the raw key NOW — it is never stored, only the hash is.
-    // The user must copy it here because it cannot be retrieved again.
     res.status(201).json({
       message: 'API key generated successfully. Copy it now — it will NOT be shown again.',
       key:     rawKey,
@@ -28,14 +22,10 @@ exports.generateKey = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// GET /api/keys — list all your API keys
-// ─────────────────────────────────────────
 exports.listKeys = async (req, res) => {
   try {
     const keys = await ApiKey.findAll({
       where: { user_id: req.user.id },
-      // Never return key_hash — only metadata
       attributes: ['id', 'is_revoked', 'usage_count', 'last_used_at', 'createdAt'],
       order: [['createdAt', 'DESC']],
     });
@@ -46,9 +36,6 @@ exports.listKeys = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// GET /api/keys/:id/stats — usage logs
-// ─────────────────────────────────────────
 exports.getStats = async (req, res) => {
   try {
     const apiKey = await ApiKey.findOne({
@@ -79,9 +66,6 @@ exports.getStats = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// PATCH /api/keys/:id/revoke — revoke a key
-// ─────────────────────────────────────────
 exports.revokeKey = async (req, res) => {
   try {
     const apiKey = await ApiKey.findOne({

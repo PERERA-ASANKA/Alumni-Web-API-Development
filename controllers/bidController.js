@@ -4,17 +4,15 @@ const { Op } = require('sequelize');
 function getTomorrowDate() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0]; // Returns "YYYY-MM-DD"
+  return d.toISOString().split('T')[0]; 
 }
 
-// POST /api/bids — place a new bid
 exports.placeBid = async (req, res) => {
   try {
     const { amount } = req.body;
     const userId = req.user.id;
     const targetDate = getTomorrowDate();
 
-    // 1. Get profile and check monthly limit
     const profile = await Profile.findOne({ where: { user_id: userId } });
     if (!profile) return res.status(404).json({ message: 'Please create your profile first' });
 
@@ -25,16 +23,13 @@ exports.placeBid = async (req, res) => {
       });
     }
 
-    // 2. Check they don't already have a bid for tomorrow
     const existingBid = await Bid.findOne({ where: { user_id: userId, target_date: targetDate } });
     if (existingBid) {
       return res.status(409).json({ message: 'You already have a bid for tomorrow. You can update it instead.' });
     }
 
-    // 3. Create bid
     const bid = await Bid.create({ user_id: userId, amount, target_date: targetDate });
 
-    // 4. BLIND BIDDING: find the current highest bid WITHOUT telling them the amount
     const highestBid = await Bid.findOne({
       where: { target_date: targetDate },
       order: [['amount', 'DESC']],
@@ -54,7 +49,6 @@ exports.placeBid = async (req, res) => {
   }
 };
 
-// PATCH /api/bids/:id — increase bid (only upward)
 exports.updateBid = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -82,7 +76,6 @@ exports.updateBid = async (req, res) => {
   }
 };
 
-// DELETE /api/bids/:id — cancel a bid
 exports.cancelBid = async (req, res) => {
   try {
     const bid = await Bid.findOne({ where: { id: req.params.id, user_id: req.user.id } });
@@ -94,7 +87,6 @@ exports.cancelBid = async (req, res) => {
   }
 };
 
-// Called by the cron job every day at 6pm
 exports.selectDailyWinner = async () => {
   const targetDate = getTomorrowDate();
 
@@ -106,23 +98,19 @@ exports.selectDailyWinner = async () => {
 
   if (!winningBid) return console.log('No bids placed for tomorrow');
 
-  // Deactivate all profiles
   await Profile.update({ is_active: false }, { where: {} });
 
-  // Activate the winner's profile and increment appearance count
   const winnerProfile = await Profile.findOne({ where: { user_id: winningBid.user_id } });
   await winnerProfile.update({
     is_active: true,
     monthly_appearances: winnerProfile.monthly_appearances + 1,
   });
 
-  // Mark all bids for that day as won/lost
   await Bid.update({ status: 'lost' }, {
     where: { target_date: targetDate, id: { [Op.ne]: winningBid.id } },
   });
   await winningBid.update({ status: 'won' });
 
-  // Record the appearance
   await Appearance.create({
     profile_id:      winnerProfile.id,
     bid_id:          winningBid.id,
@@ -132,7 +120,6 @@ exports.selectDailyWinner = async () => {
   console.log(`Winner selected: ${winningBid.User.email} for ${targetDate}`);
 };
 
-// GET /api/bids/my
 exports.getMyBids = async (req, res) => {
   try {
     const bids = await Bid.findAll({
@@ -145,7 +132,6 @@ exports.getMyBids = async (req, res) => {
   }
 };
 
-// GET /api/bids/status/tomorrow
 exports.getTomorrowStatus = async (req, res) => {
   try {
     const targetDate = getTomorrowDate();
@@ -174,7 +160,6 @@ exports.getTomorrowStatus = async (req, res) => {
   }
 };
 
-// GET /api/bids/monthly-limit
 exports.getMonthlyLimit = async (req, res) => {
   try {
     const profile = await Profile.findOne({ where: { user_id: req.user.id } });

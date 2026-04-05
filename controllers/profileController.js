@@ -2,11 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { Profile, Degree, Certification, Licence, Course, Employment } = require('../models');
 
-// ─────────────────────────────────────────
-// PROFILE — core create / get / update
-// ─────────────────────────────────────────
-
-// POST /api/profile
 exports.createProfile = async (req, res) => {
   try {
     const existing = await Profile.findOne({ where: { user_id: req.user.id } });
@@ -27,7 +22,6 @@ exports.createProfile = async (req, res) => {
   }
 };
 
-// GET /api/profile/me
 exports.getMyProfile = async (req, res) => {
   try {
     const profile = await Profile.findOne({
@@ -37,13 +31,11 @@ exports.getMyProfile = async (req, res) => {
 
     if (!profile) return res.status(404).json({ message: 'Profile not found. Please create one first.' });
 
-    // Build full image URL if image exists
     const data = profile.toJSON();
     if (data.profile_image) {
       data.profile_image = `${process.env.BASE_URL}/uploads/${data.profile_image}`;
     }
 
-    // Calculate profile completion percentage
     data.completion = calcCompletion(profile);
 
     res.json(data);
@@ -52,7 +44,6 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-// PUT /api/profile
 exports.updateProfile = async (req, res) => {
   try {
     const profile = await Profile.findOne({ where: { user_id: req.user.id } });
@@ -67,7 +58,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// POST /api/profile/image
 exports.uploadImage = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No image file provided' });
@@ -75,7 +65,6 @@ exports.uploadImage = async (req, res) => {
     const profile = await Profile.findOne({ where: { user_id: req.user.id } });
     if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
-    // Delete old image from disk if it exists
     if (profile.profile_image) {
       const oldPath = path.join(__dirname, '..', 'uploads', profile.profile_image);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -92,9 +81,6 @@ exports.uploadImage = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// Helper — profile completion score
-// ─────────────────────────────────────────
 function calcCompletion(profile) {
   let score = 0;
   if (profile.full_name)    score += 20;
@@ -104,10 +90,6 @@ function calcCompletion(profile) {
   if (profile.Degrees?.length > 0) score += 20;
   return `${score}%`;
 }
-
-// ─────────────────────────────────────────
-// DEGREES
-// ─────────────────────────────────────────
 
 exports.addDegree = async (req, res) => {
   try {
@@ -144,10 +126,6 @@ exports.deleteDegree = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// CERTIFICATIONS
-// ─────────────────────────────────────────
-
 exports.addCertification = async (req, res) => {
   try {
     const profile = await getProfile(req.user.id);
@@ -182,10 +160,6 @@ exports.deleteCertification = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-// ─────────────────────────────────────────
-// LICENCES
-// ─────────────────────────────────────────
 
 exports.addLicence = async (req, res) => {
   try {
@@ -222,9 +196,6 @@ exports.deleteLicence = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// PROFESSIONAL COURSES
-// ─────────────────────────────────────────
 
 exports.addCourse = async (req, res) => {
   try {
@@ -261,10 +232,6 @@ exports.deleteCourse = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// EMPLOYMENT HISTORY
-// ─────────────────────────────────────────
-
 exports.addEmployment = async (req, res) => {
   try {
     const profile = await getProfile(req.user.id);
@@ -300,9 +267,6 @@ exports.deleteEmployment = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// Internal helper
-// ─────────────────────────────────────────
 async function getProfile(userId) {
   return Profile.findOne({ where: { user_id: userId } });
 }
