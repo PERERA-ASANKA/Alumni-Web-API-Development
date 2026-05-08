@@ -14,6 +14,65 @@ const ctrl     = require('../controllers/bidController');
 /**
  * @swagger
  * /api/bids:
+ *   get:
+ *     summary: Get all bids for current user
+ *     tags: [Bidding]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all bids
+ */
+router.get('/', auth, ctrl.getBids);
+
+/**
+ * @swagger
+ * /api/bids/status/tomorrow:
+ *   get:
+ *     summary: Check your current win/lose status for tomorrow
+ *     tags: [Bidding]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Win or lose status }
+ */
+router.get('/status/tomorrow', auth, ctrl.getTomorrowStatus);
+
+/**
+ * @swagger
+ * /api/bids/monthly-limit:
+ *   get:
+ *     summary: Check how many monthly slots you have remaining
+ *     tags: [Bidding]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Monthly limit status }
+ */
+router.get('/monthly-limit', auth, ctrl.getMonthlyLimit);
+
+/**
+ * @swagger
+ * /api/bids/{id}:
+ *   get:
+ *     summary: Get specific bid
+ *     tags: [Bidding]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Bid details
+ */
+router.get('/:id', auth, ctrl.getBid);
+
+/**
+ * @swagger
+ * /api/bids:
  *   post:
  *     summary: Place a bid for tomorrow's featured slot
  *     tags: [Bidding]
@@ -93,44 +152,5 @@ router.patch('/:id', auth,
  *       200: { description: Bid cancelled }
  */
 router.delete('/:id', auth, ctrl.cancelBid);
-
-/**
- * @swagger
- * /api/bids/my:
- *   get:
- *     summary: View your bid history
- *     tags: [Bidding]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200: { description: List of your bids }
- */
-router.get('/my', auth, ctrl.getMyBids);
-
-/**
- * @swagger
- * /api/bids/status/tomorrow:
- *   get:
- *     summary: Check your current win/lose status for tomorrow
- *     tags: [Bidding]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200: { description: Win or lose status }
- */
-router.get('/status/tomorrow', auth, ctrl.getTomorrowStatus);
-
-/**
- * @swagger
- * /api/bids/monthly-limit:
- *   get:
- *     summary: Check how many monthly slots you have remaining
- *     tags: [Bidding]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200: { description: Monthly limit status }
- */
-router.get('/monthly-limit', auth, ctrl.getMonthlyLimit);
 
 module.exports = router;

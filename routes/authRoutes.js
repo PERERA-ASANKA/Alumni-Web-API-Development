@@ -160,6 +160,23 @@ const passwordRules = body('password')
  *         description: Validation error
  *       401:
  *         description: Token is invalid or has expired
+ *
+ * /api/auth/reset-password/{token}/validate:
+ *   get:
+ *     summary: Validate a password reset token before showing the form
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token received via email
+ *     responses:
+ *       200:
+ *         description: Reset token is valid
+ *       400:
+ *         description: Invalid or expired reset link
  */
 router.post('/register',
   body('email').isEmail().normalizeEmail(),
@@ -188,5 +205,7 @@ router.post('/reset-password/:token',
   validate,
   auth.resetPassword
 );
+
+router.get('/reset-password/:token/validate', auth.validateResetToken);
 
 module.exports = router;

@@ -4,9 +4,9 @@ module.exports = swaggerJsdoc({
   definition: {
     openapi: '3.0.0',
     info: {
-      title:       'Alumni Influencers API',
+      title:       'Alumni Platform API',
       version:     '1.0.0',
-      description: 'Web API for the AR Alumni Influencer platform — University of Eastminster',
+      description: 'Web API for the AR Alumni Platform — University of Westminster',
     },
     servers: [{ url: process.env.BASE_URL || 'http://localhost:3000' }],
     components: {

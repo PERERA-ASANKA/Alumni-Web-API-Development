@@ -73,13 +73,23 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: 'Please verify your email before logging in' });
     }
 
+    const jwtExpiresIn = (process.env.JWT_EXPIRES_IN || '').trim() || '1d';
+
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: jwtExpiresIn }
     );
 
-    res.json({ token, message: 'Logged in successfully' });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        is_verified: user.is_verified,
+      },
+      message: 'Logged in successfully',
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -128,6 +138,24 @@ exports.resetPassword = async (req, res) => {
     await record.update({ used: true });
 
     res.json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.validateResetToken = async (req, res) => {
+  try {
+    const tokenHash = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    const record = await EmailToken.findOne({
+      where: { token_hash: tokenHash, type: 'password_reset', used: false },
+    });
+
+    if (!record || record.expires_at < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired reset link' });
+    }
+
+    res.json({ message: 'Reset link is valid' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

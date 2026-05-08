@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug with Nodemon",
             "runtimeExecutable": "nodemon",
-            "program": "${workspaceFolder}/app.js",
+            "program": "${workspaceFolder}/server.js",
             "restart": true,
             "console": "integratedTerminal"
           }
