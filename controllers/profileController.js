@@ -106,7 +106,7 @@ exports.addDegree = async (req, res) => {
 
 exports.updateDegree = async (req, res) => {
   try {
-    const degree = await Degree.findOne({ where: { id: req.params.id } });
+    const degree = await getOwnedRecord(Degree, req.params.id, req.user.id);
     if (!degree) return res.status(404).json({ message: 'Degree not found' });
     await degree.update(req.body);
     res.json({ message: 'Degree updated', degree });
@@ -117,7 +117,7 @@ exports.updateDegree = async (req, res) => {
 
 exports.deleteDegree = async (req, res) => {
   try {
-    const degree = await Degree.findOne({ where: { id: req.params.id } });
+    const degree = await getOwnedRecord(Degree, req.params.id, req.user.id);
     if (!degree) return res.status(404).json({ message: 'Degree not found' });
     await degree.destroy();
     res.json({ message: 'Degree deleted' });
@@ -141,7 +141,7 @@ exports.addCertification = async (req, res) => {
 
 exports.updateCertification = async (req, res) => {
   try {
-    const cert = await Certification.findByPk(req.params.id);
+    const cert = await getOwnedRecord(Certification, req.params.id, req.user.id);
     if (!cert) return res.status(404).json({ message: 'Certification not found' });
     await cert.update(req.body);
     res.json({ message: 'Certification updated', cert });
@@ -152,7 +152,7 @@ exports.updateCertification = async (req, res) => {
 
 exports.deleteCertification = async (req, res) => {
   try {
-    const cert = await Certification.findByPk(req.params.id);
+    const cert = await getOwnedRecord(Certification, req.params.id, req.user.id);
     if (!cert) return res.status(404).json({ message: 'Certification not found' });
     await cert.destroy();
     res.json({ message: 'Certification deleted' });
@@ -176,7 +176,7 @@ exports.addLicence = async (req, res) => {
 
 exports.updateLicence = async (req, res) => {
   try {
-    const licence = await Licence.findByPk(req.params.id);
+    const licence = await getOwnedRecord(Licence, req.params.id, req.user.id);
     if (!licence) return res.status(404).json({ message: 'Licence not found' });
     await licence.update(req.body);
     res.json({ message: 'Licence updated', licence });
@@ -187,7 +187,7 @@ exports.updateLicence = async (req, res) => {
 
 exports.deleteLicence = async (req, res) => {
   try {
-    const licence = await Licence.findByPk(req.params.id);
+    const licence = await getOwnedRecord(Licence, req.params.id, req.user.id);
     if (!licence) return res.status(404).json({ message: 'Licence not found' });
     await licence.destroy();
     res.json({ message: 'Licence deleted' });
@@ -212,7 +212,7 @@ exports.addCourse = async (req, res) => {
 
 exports.updateCourse = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await getOwnedRecord(Course, req.params.id, req.user.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
     await course.update(req.body);
     res.json({ message: 'Course updated', course });
@@ -223,7 +223,7 @@ exports.updateCourse = async (req, res) => {
 
 exports.deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await getOwnedRecord(Course, req.params.id, req.user.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
     await course.destroy();
     res.json({ message: 'Course deleted' });
@@ -237,8 +237,16 @@ exports.addEmployment = async (req, res) => {
     const profile = await getProfile(req.user.id);
     if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
-    const { company, role, start_date, end_date } = req.body;
-    const emp = await Employment.create({ profile_id: profile.id, company, role, start_date, end_date });
+    const { company, role, industry, location, start_date, end_date } = req.body;
+    const emp = await Employment.create({
+      profile_id: profile.id,
+      company,
+      role,
+      industry,
+      location,
+      start_date,
+      end_date,
+    });
     res.status(201).json({ message: 'Employment added', emp });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -247,7 +255,7 @@ exports.addEmployment = async (req, res) => {
 
 exports.updateEmployment = async (req, res) => {
   try {
-    const emp = await Employment.findByPk(req.params.id);
+    const emp = await getOwnedRecord(Employment, req.params.id, req.user.id);
     if (!emp) return res.status(404).json({ message: 'Employment record not found' });
     await emp.update(req.body);
     res.json({ message: 'Employment updated', emp });
@@ -258,7 +266,7 @@ exports.updateEmployment = async (req, res) => {
 
 exports.deleteEmployment = async (req, res) => {
   try {
-    const emp = await Employment.findByPk(req.params.id);
+    const emp = await getOwnedRecord(Employment, req.params.id, req.user.id);
     if (!emp) return res.status(404).json({ message: 'Employment record not found' });
     await emp.destroy();
     res.json({ message: 'Employment deleted' });
@@ -269,4 +277,11 @@ exports.deleteEmployment = async (req, res) => {
 
 async function getProfile(userId) {
   return Profile.findOne({ where: { user_id: userId } });
+}
+
+async function getOwnedRecord(model, id, userId) {
+  return model.findOne({
+    where: { id },
+    include: [{ model: Profile, where: { user_id: userId }, attributes: [] }],
+  });
 }

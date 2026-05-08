@@ -87,6 +87,63 @@ exports.cancelBid = async (req, res) => {
   }
 };
 
+// Get all bids for current user
+exports.getBids = async (req, res) => {
+  try {
+    const bids = await Bid.findAll({
+      where: { user_id: req.user.id },
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Determine highest bid per target date so we can mark pending bids as winning/losing
+    const uniqueDates = Array.from(new Set(bids.map(b => b.target_date)));
+    const highestByDate = {};
+    for (const date of uniqueDates) {
+      const highest = await Bid.findOne({
+        where: { target_date: date },
+        order: [['amount', 'DESC']],
+      });
+      highestByDate[date] = highest ? highest.id : null;
+    }
+
+    res.json({
+      total: bids.length,
+      bids: bids.map(b => ({
+        id: b.id,
+        amount: b.amount,
+        targetDate: b.target_date,
+        status: (b.status === 'pending' && highestByDate[b.target_date])
+          ? (highestByDate[b.target_date] === b.id ? 'winning' : 'losing')
+          : b.status,
+        createdAt: b.createdAt,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get specific bid
+exports.getBid = async (req, res) => {
+  try {
+    const bid = await Bid.findOne({
+      where: { id: req.params.id, user_id: req.user.id },
+    });
+
+    if (!bid) return res.status(404).json({ message: 'Bid not found' });
+
+    res.json({
+      id: bid.id,
+      amount: bid.amount,
+      targetDate: bid.target_date,
+      status: bid.status,
+      createdAt: bid.createdAt,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.selectDailyWinner = async () => {
   const targetDate = getTomorrowDate();
 
@@ -118,18 +175,6 @@ exports.selectDailyWinner = async () => {
   });
 
   console.log(`Winner selected: ${winningBid.User.email} for ${targetDate}`);
-};
-
-exports.getMyBids = async (req, res) => {
-  try {
-    const bids = await Bid.findAll({
-      where: { user_id: req.user.id },
-      order: [['createdAt', 'DESC']],
-    });
-    res.json(bids);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 };
 
 exports.getTomorrowStatus = async (req, res) => {

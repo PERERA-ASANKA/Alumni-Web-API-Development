@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendVerificationEmail = async (email, token) => {
-  const url = `${process.env.BASE_URL}/api/auth/verify/${token}`;
+  const url = `${process.env.UI_BASE_URL}/verify-email/${token}`;
   await transporter.sendMail({
     from:    `"Alumni Platform" <${process.env.EMAIL_USER}>`,
     to:      email,
@@ -22,7 +22,7 @@ exports.sendVerificationEmail = async (email, token) => {
 };
 
 exports.sendPasswordResetEmail = async (email, token) => {
-  const url = `${process.env.BASE_URL}/api/auth/reset-password/${token}`;
+  const url = `${process.env.UI_BASE_URL}/reset-password/${token}`;
   await transporter.sendMail({
     from:    `"Alumni Platform" <${process.env.EMAIL_USER}>`,
     to:      email,

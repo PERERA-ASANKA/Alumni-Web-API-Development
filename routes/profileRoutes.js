@@ -237,12 +237,23 @@ router.delete('/courses/:id', auth, ctrl.deleteCourse);
  *             properties:
  *               company:    { type: string }
  *               role:       { type: string }
+ *               industry:   { type: string }
+ *               location:   { type: string }
  *               start_date: { type: string, format: date }
  *               end_date:   { type: string, format: date }
  *     responses:
  *       201: { description: Employment added }
  */
-router.post('/employment',       auth, body('company').notEmpty(), body('role').notEmpty(), validate, ctrl.addEmployment);
+router.post(
+  '/employment',
+  auth,
+  body('company').notEmpty(),
+  body('role').notEmpty(),
+  body('industry').notEmpty().withMessage('Industry is required'),
+  body('location').notEmpty().withMessage('Location is required'),
+  validate,
+  ctrl.addEmployment
+);
 router.put('/employment/:id',    auth, ctrl.updateEmployment);
 router.delete('/employment/:id', auth, ctrl.deleteEmployment);
 
